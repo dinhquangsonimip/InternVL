@@ -93,6 +93,9 @@ class ModelArguments:
         default=None,
         metadata={'help': 'Path to a pretrained model (local or from huggingface.co/models).'}
     )
+    use_flash_attn: bool = field(
+        default=False, metadata={"help": "Whether to enable FlashAttention or not"}
+    )
     vision_path: Optional[str] = field(
         default=None,
         metadata={'help': 'Path to a pretrained model (local or from huggingface.co/models).'}
@@ -916,6 +919,8 @@ def main():
             model_args.vision_path, torch_dtype=torch.bfloat16, config=vision_config)
         logger.info('Loading LLaMA...')
         llm_config = AutoConfig.from_pretrained(model_args.llm_path, trust_remote_code=True)
+        llm_config.attn_flash = model_args.use_flash_attn  # Use the parsed argument
+
         if llm_config.model_type == 'internlm2':
             model_type = InternLM2ForCausalLM
             llm_config.attn_implementation = 'flash_attention_2'  # for InternLM
